@@ -13,11 +13,13 @@
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.10.16",
     "@mui/material": "^5.10.17",
+    "chroma-js": "^2.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "socket.io-client": "^4.5.4"
   },
   "devDependencies": {
+    "@types/chroma-js": "^2.1.4",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "^2.2.0",

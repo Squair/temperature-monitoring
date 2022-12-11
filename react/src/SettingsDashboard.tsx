@@ -1,48 +1,37 @@
 import { Container, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ChangeEvent, FunctionComponent, useEffect, useState } from "react";
+import { ChangeEvent, FunctionComponent, SetStateAction, useEffect, useState } from "react";
+import { getTargetTemperatureCacheKey, unitCacheKey } from "./constants";
+import { IUserSettings } from "./interface/IUserSettings";
 import { Unit } from "./type/Unit";
 
 interface SettingsDashboardProps {
     open?: boolean;
     deviceId: string;
+    userSettings: IUserSettings;
+    setUserSettings: React.Dispatch<SetStateAction<IUserSettings>>;
 }
 
-const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId }) => {
-    const [unit, SetUnit] = useState<Unit>('celsius');
-    const [targetTemperature, setTargetTemperature] = useState<Number>(70);
-    
-    const targetTemperatureCacheKey = `${deviceId}-target-temperature`;
-    const unitCacheKey = "unit";
-
-    // Read existing settings on mount.
-    useEffect(() => {
-        const cachedTargetTemperature = localStorage.getItem(targetTemperatureCacheKey);
-        const cachedUnit = localStorage.getItem(unitCacheKey) as Unit;
-
-        const parsedTargetTemperature = parseInt(cachedTargetTemperature ?? "0");
-        
-        setTargetTemperature(isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature);
-        SetUnit(cachedUnit);
-    }, []);
+const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, setUserSettings }) => {
+    const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
 
     const onTargetTemperatureTextChange = (event: ChangeEvent<HTMLInputElement>) => {
         const parsedTargetTemperature = parseInt(event.target.value);
         const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
-        setTargetTemperature(value);
+        setUserSettings(us => ({ ...us, targetTemperature: value }));
         localStorage.setItem(targetTemperatureCacheKey, value.toString());
     }
 
     const handleUnitChange = (event: React.MouseEvent<HTMLElement>, newUnit: Unit,) => {
-        SetUnit(newUnit);
-        localStorage.setItem("unit", newUnit);
+        setUserSettings(us => ({ ...us, unit: newUnit }));
+        localStorage.setItem(unitCacheKey, newUnit);
     }
 
     if (!open) return (null);
 
     return (
-        <Container maxWidth={'md'} sx={{ display: 'flex', gap: '1em', flexDirection: 'column'}}>
+        <Container maxWidth={'md'} sx={{ display: 'flex', gap: '1em', flexDirection: 'column' }}>
             <ToggleButtonGroup
-                value={unit}
+                value={userSettings.unit}
                 exclusive
                 onChange={handleUnitChange}
                 aria-label="Unit selection"
@@ -53,11 +42,11 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
 
             <TextField
                 onChange={onTargetTemperatureTextChange}
-                value={targetTemperature}
+                value={userSettings.targetTemperature}
                 variant='outlined'
                 label='Target temperature'
                 InputProps={{
-                     endAdornment: <InputAdornment position="end">° {unit === 'celsius' ? 'C' : 'F'}</InputAdornment>
+                    endAdornment: <InputAdornment position="end">° {userSettings.unit === 'celsius' ? 'C' : 'F'}</InputAdornment>
                 }}
             />
         </Container>
