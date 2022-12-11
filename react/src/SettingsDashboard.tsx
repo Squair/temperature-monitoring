@@ -19,14 +19,16 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
         const cachedTargetTemperature = localStorage.getItem(targetTemperatureCacheKey);
         const cachedUnit = localStorage.getItem(unitCacheKey) as Unit;
 
-        setTargetTemperature(parseInt(cachedTargetTemperature ?? "0"));
+        const parsedTargetTemperature = parseInt(cachedTargetTemperature ?? "0");
+        
+        setTargetTemperature(isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature);
         SetUnit(cachedUnit);
     }, []);
 
     const onTargetTemperatureTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const value = parseInt(event.target.value);
-        
-        setTargetTemperature(value ? value : 0);
+        const parsedTargetTemperature = parseInt(event.target.value);
+        const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
+        setTargetTemperature(value);
         localStorage.setItem(targetTemperatureCacheKey, value.toString());
     }
 
