@@ -1,6 +1,6 @@
 export interface ITemperatureRecording {
     id: string;
-    temperature: Number;
-    humidity: Number;
+    temperature: number;
+    humidity: number;
     timeReceived: Date;
 }
