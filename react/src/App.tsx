@@ -24,7 +24,7 @@ const App = () => {
   const colors = chroma.scale(["#4287f5", "#f54242"]).colors(totalColourScale);
 
   // Read existing settings on mount.
-  useEffect(() => {    
+  useEffect(() => {
     const cachedTargetTemperature = localStorage.getItem(targetTemperatureCacheKey);
     const cachedUnit = localStorage.getItem(unitCacheKey) as Unit;
     const parsedTargetTemperature = parseInt(cachedTargetTemperature ?? "0");
@@ -35,25 +35,20 @@ const App = () => {
   useEffect(() => {
     // Connect to socket server
     if (!socket) {
-      setSocket(io(import.meta.env.VITE_SOCKET_HOST, { query: { userId: "1", monitoringGroupId: "1" }}));
+      setSocket(io(import.meta.env.VITE_SOCKET_HOST, { query: { userId: "1", monitoringGroupId: "1" } }));
     }
 
-    socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => { 
+    socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => {
       setTemperatureRecording(recording);
+
+      // When receiving temperature, calculate the color for the progress
+      const progressPercentage = Math.floor((recording.temperature / userSettings.targetTemperature) * 100);
+      setBackgroundColour(colors[progressPercentage]);
     });
 
     // Disconnect socket when component unmounts
     return () => { socket?.disconnect() }
   }, [socket]);
-
-  // When receiving temperature, calculate the color for the progress
-  useEffect(() => {
-    if (!temperatureRecording) return;
-
-    const progressPercentage = Math.floor((temperatureRecording.temperature / userSettings.targetTemperature ) * 100);
-    setBackgroundColour(colors[progressPercentage]);
-    
-  }, [temperatureRecording]);
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
