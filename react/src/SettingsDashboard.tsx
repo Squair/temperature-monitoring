@@ -1,6 +1,7 @@
 import { Container, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ChangeEvent, FunctionComponent, SetStateAction, useEffect, useState } from "react";
+import { ChangeEvent, FunctionComponent, SetStateAction } from "react";
 import { getTargetTemperatureCacheKey, unitCacheKey } from "./constants";
+import { useTemperatureUtilities } from "./hooks/useTemperatureUtilities";
 import { IUserSettings } from "./interface/IUserSettings";
 import { Unit } from "./type/Unit";
 
@@ -12,6 +13,7 @@ interface SettingsDashboardProps {
 }
 
 const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, setUserSettings }) => {
+    const { getTemperatureUnitSymbol } = useTemperatureUtilities();
     const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
 
     const onTargetTemperatureTextChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +48,7 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
                 variant='outlined'
                 label='Target temperature'
                 InputProps={{
-                    endAdornment: <InputAdornment position="end">° {userSettings.unit === 'celsius' ? 'C' : 'F'}</InputAdornment>
+                    endAdornment: <InputAdornment position="end">{getTemperatureUnitSymbol(userSettings.unit)}</InputAdornment>
                 }}
             />
         </Container>

@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
-import { io, Socket } from "socket.io-client";
-import { ITemperatureRecording } from './interface/ITemperatureRecording';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
-import SettingsDashboard from './SettingsDashboard';
 import chroma from "chroma-js";
-import { IUserSettings } from './interface/IUserSettings';
+import { useEffect, useState } from 'react';
+import { io, Socket } from "socket.io-client";
 import { getTargetTemperatureCacheKey, unitCacheKey } from './constants';
+import { useTemperatureUtilities } from './hooks/useTemperatureUtilities';
+import { ITemperatureRecording } from './interface/ITemperatureRecording';
+import { IUserSettings } from './interface/IUserSettings';
+import SettingsDashboard from './SettingsDashboard';
 import { Unit } from './type/Unit';
 
 const App = () => {
@@ -15,6 +16,8 @@ const App = () => {
   const [temperatureRecording, setTemperatureRecording] = useState<ITemperatureRecording>({ id: "1", humidity: 2, temperature: 35, timeReceived: new Date() });
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColour, setBackgroundColour] = useState<string>();
+
+  const { getTemperatureUnitSymbol } = useTemperatureUtilities();
 
   const deviceId = "1234";
 
@@ -41,34 +44,42 @@ const App = () => {
     socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => {
       setTemperatureRecording(recording);
 
-      // When receiving temperature, calculate the color for the progress
-      const progressPercentage = Math.floor((recording.temperature / userSettings.targetTemperature) * 100);
-      setBackgroundColour(colors[progressPercentage]);
     });
 
     // Disconnect socket when component unmounts
     return () => { socket?.disconnect() }
   }, [socket]);
 
+  useEffect(() => {
+    if (!temperatureRecording) return;
+
+    // When receiving temperature, calculate the color for the progress
+    const progressPercentage = Math.min(colors.length - 1, Math.floor((temperatureRecording.temperature / userSettings.targetTemperature) * 100));
+    setBackgroundColour(colors[progressPercentage]);
+  }, [temperatureRecording])
+
   const toggleSettings = () => setShowSettings(!showSettings);
 
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
-    <div style={{ height: '100%', width: '100%', backgroundColor: backgroundColour }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor: backgroundColour }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <IconButton onClick={toggleSettings}>
           <SettingsIcon />
         </IconButton>
       </div>
 
-      <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} setUserSettings={setUserSettings} />
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
+        <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} setUserSettings={setUserSettings} />
 
-      {temperatureRecording && (
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <p>Temperature: {temperatureRecording.temperature.toString()}</p>
-          <p>Humidity: {temperatureRecording.humidity.toString()}</p>
-        </div>
-      )}
+        {temperatureRecording && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h1 style={{ textAlign: 'center' }}>Temperature: {temperatureRecording.temperature.toString()}{getTemperatureUnitSymbol(userSettings.unit)}</h1>
+            <h1 style={{ textAlign: 'center' }}>Humidity: {temperatureRecording.humidity.toString()}%</h1>
+          </div>
+        )}
+
+      </div>
     </div>
   )
 }
