@@ -3,6 +3,7 @@ import { IconButton } from '@mui/material';
 import chroma from "chroma-js";
 import { useEffect, useState } from 'react';
 import { io, Socket } from "socket.io-client";
+import TemperatureDisplay from './components/TemperatureDisplay';
 import { getTargetTemperatureCacheKey, unitCacheKey } from './constants';
 import { useTemperatureUtilities } from './hooks/useTemperatureUtilities';
 import { ITemperatureRecording } from './interface/ITemperatureRecording';
@@ -13,11 +14,9 @@ import { Unit } from './type/Unit';
 const App = () => {
   const [socket, setSocket] = useState<Socket>();
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [temperatureRecording, setTemperatureRecording] = useState<ITemperatureRecording>({ id: "1", humidity: 2, temperature: 35, timeReceived: new Date() });
+  const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>({ id: "1", humidity: 2, temperature: 35, timeReceived: new Date() });
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColour, setBackgroundColour] = useState<string>();
-
-  const { getTemperatureUnitSymbol } = useTemperatureUtilities();
 
   const deviceId = "1234";
 
@@ -42,7 +41,7 @@ const App = () => {
     }
 
     socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => {
-      setTemperatureRecording(recording);
+      setCurrentTemperature(recording);
 
     });
 
@@ -51,12 +50,12 @@ const App = () => {
   }, [socket]);
 
   useEffect(() => {
-    if (!temperatureRecording) return;
+    if (!currentTemperature) return;
 
     // When receiving temperature, calculate the color for the progress
-    const progressPercentage = Math.min(colors.length - 1, Math.floor((temperatureRecording.temperature / userSettings.targetTemperature) * 100));
+    const progressPercentage = Math.min(colors.length - 1, Math.floor((currentTemperature.temperature / userSettings.targetTemperature) * 100));
     setBackgroundColour(colors[progressPercentage]);
-  }, [temperatureRecording, userSettings.targetTemperature])
+  }, [currentTemperature, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
@@ -71,14 +70,7 @@ const App = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} setUserSettings={setUserSettings} />
-
-        {temperatureRecording && (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h1 style={{ textAlign: 'center' }}>Temperature: {temperatureRecording.temperature.toString()}{getTemperatureUnitSymbol(userSettings.unit)}</h1>
-            <h1 style={{ textAlign: 'center' }}>Humidity: {temperatureRecording.humidity.toString()}%</h1>
-          </div>
-        )}
-
+        {currentTemperature && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
     </div>
   )
