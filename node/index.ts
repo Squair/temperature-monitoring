@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { Server, Socket } from "socket.io";
 import { v4 as uuidv4 } from 'uuid';
+import { useStubTemperatureRecordingEvents } from './src/stubEvents';
 
 // Load variables from .env into process
 config();
@@ -10,8 +11,11 @@ const port = process.env.PORT;
 
 const io = new Server(parseInt(port), { cors: { origin: allowedOrigins } });
 
-interface ITemperatureRecording {
-
+export interface ITemperatureRecording {
+    id: string;
+    temperature: number;
+    humidity: number;
+    timeReceived: Date;
 }
 
 io.on("connection", (socket) => {
@@ -21,12 +25,17 @@ io.on("connection", (socket) => {
     const monitoringGroupId = socket.handshake.query.monitoringGroupId as string;
 
     if (deviceId) {
-        socket.on("send-temperature-recording", 
-                 (recording: ITemperatureRecording) => io.to(monitoringGroupId).emit("recieve-temperature-recording", recording));
+        socket.on("send-temperature-recording",
+            (recording: ITemperatureRecording) => io.to(monitoringGroupId).emit("recieve-temperature-recording", recording));
 
     } else if (userId) {
         socket.join(monitoringGroupId);
     }
 
-    socket.on("disconnect", () => {});
+    // This will emulate events being recieved and broadcast, for testing purposes only.
+    if (process.env.USE_EVENT_STUBS) {
+        useStubTemperatureRecordingEvents(socket, monitoringGroupId, 5000)
+    }
+
+    socket.on("disconnect", () => { });
 });
