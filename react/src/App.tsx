@@ -56,7 +56,7 @@ const App = () => {
     // When receiving temperature, calculate the color for the progress
     const progressPercentage = Math.min(colors.length - 1, Math.floor((temperatureRecording.temperature / userSettings.targetTemperature) * 100));
     setBackgroundColour(colors[progressPercentage]);
-  }, [temperatureRecording])
+  }, [temperatureRecording, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
