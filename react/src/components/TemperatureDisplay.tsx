@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 import { useTemperatureUtilities } from "../hooks/useTemperatureUtilities";
 import { ITemperatureRecording } from "../interface/ITemperatureRecording";
 import { Unit } from "../type/Unit";
+import Measurement from "./Measurement";
 
 interface TemperatureDisplayProps {
     currentTemperature: ITemperatureRecording;
@@ -12,9 +13,12 @@ const TemperatureDisplay: FunctionComponent<TemperatureDisplayProps> = ({ curren
     const { getTemperatureUnitSymbol } = useTemperatureUtilities();
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h1 style={{ textAlign: 'center' }}>Temperature: {currentTemperature.temperature.toString()}{getTemperatureUnitSymbol(unit)}</h1>
-            <h1 style={{ textAlign: 'center' }}>Humidity: {currentTemperature.humidity.toString()}%</h1>
+        <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+            <Measurement name='Temperature' value={`${currentTemperature.temperature.toString()}${getTemperatureUnitSymbol(unit)}`} centerOffset='-10em' />
+            
+            <div style={{ height: '105%', width: '0.25em', borderRadius: '1em', backgroundColor: 'white', margin: '1em', transform: 'rotate(20deg)' }} />
+            
+            <Measurement name='Humidity' value={`${currentTemperature.humidity.toString()}%`} centerOffset='10em' />
         </div>
     )
 }

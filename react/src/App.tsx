@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { io, Socket } from "socket.io-client";
 import TemperatureDisplay from './components/TemperatureDisplay';
 import { getTargetTemperatureCacheKey, unitCacheKey } from './constants';
-import { useTemperatureUtilities } from './hooks/useTemperatureUtilities';
 import { ITemperatureRecording } from './interface/ITemperatureRecording';
 import { IUserSettings } from './interface/IUserSettings';
 import SettingsDashboard from './SettingsDashboard';
@@ -14,7 +13,7 @@ import { Unit } from './type/Unit';
 const App = () => {
   const [socket, setSocket] = useState<Socket>();
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>({ id: "1", humidity: 2, temperature: 35, timeReceived: new Date() });
+  const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>();
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColour, setBackgroundColour] = useState<string>();
 
@@ -42,7 +41,6 @@ const App = () => {
 
     socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => {
       setCurrentTemperature(recording);
-
     });
 
     // Disconnect socket when component unmounts
@@ -62,7 +60,7 @@ const App = () => {
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor: backgroundColour }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', position: 'absolute' }}>
         <IconButton onClick={toggleSettings}>
           <SettingsIcon />
         </IconButton>
@@ -70,7 +68,7 @@ const App = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} setUserSettings={setUserSettings} />
-        {currentTemperature && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
+        {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
     </div>
   )
