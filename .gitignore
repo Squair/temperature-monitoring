@@ -13,6 +13,8 @@
 .yarn/build-state.yml
 */install-state.gz
 
+*/.vscode
+
 # testing
 */coverage
 
