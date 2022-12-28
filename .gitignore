@@ -2,9 +2,18 @@
 
 # dependencies
 */node_modules
-.yarn
-/.pnp
-.pnp.js
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+*/.yarn/unplugged
+.yarn/build-state.yml
+*/install-state.gz
+
+*/.vscode
 
 # testing
 */coverage

@@ -15,9 +15,9 @@ const TemperatureDisplay: FunctionComponent<TemperatureDisplayProps> = ({ curren
     return (
         <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
             <Measurement name='Temperature' value={`${currentTemperature.temperature.toString()}${getTemperatureUnitSymbol(unit)}`} centerOffset='-10em' />
-            
+
             <div style={{ height: '105%', width: '0.25em', borderRadius: '1em', backgroundColor: 'white', margin: '1em', transform: 'rotate(20deg)' }} />
-            
+
             <Measurement name='Humidity' value={`${currentTemperature.humidity.toString()}%`} centerOffset='10em' />
         </div>
     )
