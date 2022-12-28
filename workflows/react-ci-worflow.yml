@@ -1,0 +1,53 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      working-directory: './react'
+      run: |
+        corepack enable
+        yarn install
+
+    # - name: Test
+    #   working-directory: './react'
+    #   run: yarn run test-coverage
+
+    # - name: Upload test coverage to Codecov
+    #   uses: codecov/codecov-action@v2
+
+    - name: Deploy
+      working-directory: './react'
+      run: |
+        git config --global user.name $user_name
+        git config --global user.email $user_email
+        git remote set-url origin https://${github_token}@github.com/${repository}
+        yarn run predeploy
+        yarn run deploy
+      env:
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        github_token: ${{ secrets.ACTIONS_DEPLOY_ACCESS_TOKEN }}
+        repository: ${{ github.repository }}
+        VITE_SOCKET_HOST: ${{ secrets.VITE_SOCKET_HOST }}
