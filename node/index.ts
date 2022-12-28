@@ -9,7 +9,7 @@ config();
 const allowedOrigins = process.env.ALLOWED_ORIGINS;
 const port = process.env.PORT;
 
-const io = new Server(parseInt(port), { cors: { origin: "*" } });
+const io = new Server(parseInt(port), { cors: { origin: allowedOrigins } });
 
 export interface ITemperatureRecording {
     id: string;
