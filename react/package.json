@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "predeploy": "yarn run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist",
     "build": "tsc && vite build --base ./",
     "test": "jest -env=jsdom",
     "test-coverage": "jest -env=jsdom --coverage"
