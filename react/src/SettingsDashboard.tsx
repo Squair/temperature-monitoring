@@ -23,7 +23,7 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
         localStorage.setItem(targetTemperatureCacheKey, value.toString());
     }
 
-    const handleUnitChange = (event: React.MouseEvent<HTMLElement>, newUnit: Unit,) => {
+    const handleUnitChange = (_: React.MouseEvent<HTMLElement>, newUnit: Unit,) => {
         setUserSettings(us => ({ ...us, unit: newUnit }));
         localStorage.setItem(unitCacheKey, newUnit);
     }
@@ -31,14 +31,14 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
     if (!open) return (null);
 
     return (
-        <Container maxWidth={'md'} sx={{ display: 'flex', gap: '1em', flexDirection: 'column' }}>
+        <Container maxWidth='md' sx={{ display: 'flex', gap: '1em', flexDirection: 'column' }}>
             <ToggleButtonGroup
                 value={userSettings.unit}
                 exclusive
                 onChange={handleUnitChange}
                 aria-label="Unit selection"
             >
-                <ToggleButton value={"celsius"} aria-label="celsius" children="Celsius" />
+                <ToggleButton value="celsius" aria-label="celsius" children="Celsius" />
                 <ToggleButton value="fahrenheit" aria-label="fahrenheit" children="Fahrenheit" />
             </ToggleButtonGroup>
 

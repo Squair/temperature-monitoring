@@ -12,13 +12,16 @@ interface TemperatureDisplayProps {
 const TemperatureDisplay: FunctionComponent<TemperatureDisplayProps> = ({ currentTemperature, unit }) => {
     const { getTemperatureUnitSymbol } = useTemperatureUtilities();
 
+    const temperatureDisplay = `${currentTemperature.temperature.toFixed(2).toString()}${getTemperatureUnitSymbol(unit)}`;
+    const humidityDisplay = `${currentTemperature.humidity.toFixed(2).toString()}%`;
+    
     return (
         <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-            <Measurement name='Temperature' value={`${currentTemperature.temperature.toString()}${getTemperatureUnitSymbol(unit)}`} centerOffset='-10em' />
+            <Measurement name='Temperature' value={temperatureDisplay} centerOffset='-10em' />
 
             <div style={{ height: '105%', width: '0.25em', borderRadius: '1em', backgroundColor: 'white', margin: '1em', transform: 'rotate(20deg)' }} />
 
-            <Measurement name='Humidity' value={`${currentTemperature.humidity.toString()}%`} centerOffset='10em' />
+            <Measurement name='Humidity' value={humidityDisplay} centerOffset='10em' />
         </div>
     )
 }

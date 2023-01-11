@@ -15,7 +15,7 @@ const App = () => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>();
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
-  const [backgroundColour, setBackgroundColour] = useState<string>();
+  const [backgroundColor, setBackgroundColor] = useState<string>();
 
   const deviceId = "1234";
 
@@ -52,14 +52,14 @@ const App = () => {
 
     // When receiving temperature, calculate the color for the progress
     const progressPercentage = Math.min(colors.length - 1, Math.floor((currentTemperature.temperature / userSettings.targetTemperature) * 100));
-    setBackgroundColour(colors[progressPercentage]);
+    setBackgroundColor(colors[progressPercentage]);
   }, [currentTemperature, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor: backgroundColour }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', position: 'absolute' }}>
         { currentTemperature && <h4>Last received: {new Date(currentTemperature.timeReceived).toLocaleString()}</h4>}
         <IconButton onClick={toggleSettings}>
