@@ -69,6 +69,3 @@ async def main():
         await asyncio.sleep(3)
 
 asyncio.run(main())  # main loop
-
-
-
