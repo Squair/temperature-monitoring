@@ -9,8 +9,8 @@ const useStubTemperatureRecordingEvents = async (socket: Socket, roomId: string,
 
         const tr: ITemperatureRecording = {
             id: i.toString(),
-            humidity: i,
-            temperature: i,
+            humidity: i + Math.random(),
+            temperature: i + Math.random(),
             timeReceived: new Date()
         }
 
