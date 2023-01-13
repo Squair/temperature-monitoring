@@ -60,9 +60,9 @@ const App = () => {
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', position: 'absolute' }}>
-        { currentTemperature && <h4>Last received: {new Date(currentTemperature.timeReceived).toLocaleString()}</h4>}
-        <IconButton onClick={toggleSettings}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'absolute' }}>
+        {currentTemperature && <h4 style={{ paddingLeft: '0.5em' }}>Last received: {new Date(currentTemperature.timeReceived).toLocaleString()}</h4>}
+        <IconButton onClick={toggleSettings} >
           <SettingsIcon />
         </IconButton>
       </div>
