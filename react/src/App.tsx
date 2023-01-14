@@ -58,8 +58,6 @@ const App = () => {
   const toggleSettings = () => setShowSettings(!showSettings);
 
   const handleUserSettingsChange = async (settings: IUserSettings) => {
-    console.log("Emit");
-    
     socket?.emit("target-temperature-change", { targetTemperature: settings.targetTemperature });
     setUserSettings(settings);
   }
