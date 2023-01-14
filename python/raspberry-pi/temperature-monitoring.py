@@ -61,11 +61,11 @@ async def main():
         try:
             if (not sio.connected):
                 await sio.connect(f'{socketHost}?deviceId=1&monitoringGroupId=1')
+            
+            if (sio.connected):
+                await sio.emit('send-temperature-recording', read_sensor_values())
+            await asyncio.sleep(3)
         except:
-            print("Something went wrong while trying to connect to socket server.")
-
-        if (sio.connected):
-            await sio.emit('send-temperature-recording', read_sensor_values())
-        await asyncio.sleep(3)
+            print("Something went wrong while either trying to connect to socket server or emit event.")
 
 asyncio.run(main())  # main loop
