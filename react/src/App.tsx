@@ -57,6 +57,13 @@ const App = () => {
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
+  const handleUserSettingsChange = async (settings: IUserSettings) => {
+    console.log("Emit");
+    
+    socket?.emit("target-temperature-change", { targetTemperature: settings.targetTemperature });
+    setUserSettings(settings);
+  }
+
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
@@ -68,7 +75,7 @@ const App = () => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
-        <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} setUserSettings={setUserSettings} />
+        <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
         {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
     </div>

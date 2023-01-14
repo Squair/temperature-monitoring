@@ -9,22 +9,22 @@ interface SettingsDashboardProps {
     open?: boolean;
     deviceId: string;
     userSettings: IUserSettings;
-    setUserSettings: React.Dispatch<SetStateAction<IUserSettings>>;
+    handleUserSettingsChange: (settings: IUserSettings) => Promise<void>;
 }
 
-const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, setUserSettings }) => {
+const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, handleUserSettingsChange }) => {
     const { getTemperatureUnitSymbol } = useTemperatureUtilities();
     const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
 
     const onTargetTemperatureTextChange = (event: ChangeEvent<HTMLInputElement>) => {
         const parsedTargetTemperature = parseInt(event.target.value);
         const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
-        setUserSettings(us => ({ ...us, targetTemperature: value }));
+        handleUserSettingsChange(({ ...userSettings, targetTemperature: value }));
         localStorage.setItem(targetTemperatureCacheKey, value.toString());
     }
 
     const handleUnitChange = (_: React.MouseEvent<HTMLElement>, newUnit: Unit,) => {
-        setUserSettings(us => ({ ...us, unit: newUnit }));
+        handleUserSettingsChange({ ...userSettings, unit: newUnit });
         localStorage.setItem(unitCacheKey, newUnit);
     }
 
