@@ -1,0 +1,4 @@
+meross_iot==0.4.5.9
+python-dotenv==0.21.0
+flask==2.2.2
+"Flask[async]"==2.2.2
