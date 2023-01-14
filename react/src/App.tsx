@@ -22,6 +22,8 @@ const App = () => {
   const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
 
   const totalColourScale = 100;
+  const minimumTemperature = 13;
+  
   const colors = chroma.scale(["#4287f5", "#f54242"]).colors(totalColourScale);
 
   // Read existing settings on mount.
@@ -51,8 +53,12 @@ const App = () => {
     if (!currentTemperature) return;
 
     // When receiving temperature, calculate the color for the progress
-    const progressPercentage = Math.min(colors.length - 1, Math.floor((currentTemperature.temperature / userSettings.targetTemperature) * 100));
-    setBackgroundColor(colors[progressPercentage]);
+    
+    const range = Math.max(1, userSettings.targetTemperature - minimumTemperature);
+    const correctedValue = currentTemperature.temperature - minimumTemperature;
+    const progressPercentage = Math.floor((correctedValue * 100) / range);
+    
+    setBackgroundColor(colors[Math.min(colors.length - 1, progressPercentage)]);
   }, [currentTemperature, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
