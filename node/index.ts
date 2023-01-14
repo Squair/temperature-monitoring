@@ -13,6 +13,10 @@ const port = process.env.PORT;
 const io = new Server(parseInt(port), { cors: { origin: "*" } });
 let targetTemperature = 18;
 
+type HeaterState = "Undiscovered" | "On" | "Off"
+
+let heaterState: HeaterState = "Undiscovered";
+
 export interface ITemperatureRecording {
     id: string;
     temperature: number;
@@ -31,12 +35,14 @@ const handleTargetTemperatureChange = (settings: IUserSettings) => {
 const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {
     socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
 
-    if (recording.temperature < targetTemperature) {
+    if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
         await axios.get(`${process.env.MEROSS_HOST}/heater/on`);
-    } else if (recording.temperature > targetTemperature) {
+        heaterState = 'On';
+    } else if (recording.temperature > targetTemperature && (heaterState == 'On' || heaterState == 'Undiscovered')) {
         // call api to turn off heater
         await axios.get(`${process.env.MEROSS_HOST}/heater/off`);
+        heaterState = 'Off';
     }
 }
 
