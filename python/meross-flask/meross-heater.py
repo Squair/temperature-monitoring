@@ -56,19 +56,21 @@ async def heater_state_update():
         # The first time we play with a device, we must update its status
         await device.async_update()
 
-        if (state):
+        if (state == "1"):
              print(f"Turning on the {device.name}...")
              await device.async_turn_on(channel=0)
              # Read the electricity power/voltage/current
              startPower = await device.async_get_instant_metrics()
-        else:
+        elif (state == "0"):
             print(f"Turning off the {device.name}...")
             await device.async_turn_off(channel=0)
             endPower = await device.async_get_instant_metrics()
             print(f"Electricity consumption since on: {endPower}")
 
     await close_connection(manager, httpClient)
-    return jsonify({"message": "Header turn on"}), 200
+
+    message = "off" if not state else "on" 
+    return jsonify({"message": f"Header turned {message}"}), 200
 
 if __name__ == "__main__":
     from waitress import serve
