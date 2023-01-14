@@ -1,7 +1,9 @@
 # Meross flask
 
-This service exposes two endpoints to control a smart plug attached to a heater:
+This service exposes an endpoint to control a smart plug attached to a heater:
 
-`GET /heater/on`
+## Turn on heater
+`PUT /heater?state=1`
 
-`GET /heater/off`
+## Turn off heater
+`PUT /heater?state=0`

@@ -34,7 +34,7 @@ def is_authenticated(request):
     auth = headers.get("X-Api-Key")
     return auth == os.environ.get('KEY')
 
-@app.route("/heater")
+@app.route("/heater", methods = ["PUT"])
 async def heater_state_update():
     if (not is_authenticated(request)):
         return jsonify({"message": "ERROR: Unauthorized"}), 401

@@ -17,6 +17,8 @@ type HeaterState = "Undiscovered" | "On" | "Off"
 
 let heaterState: HeaterState = "Undiscovered";
 
+const deviceMostRecentTemperature: { [key: string]: ITemperatureRecording } = {}
+
 axios.defaults.headers.common = {
     "X-API-Key": process.env.KEY,
 };
@@ -32,26 +34,36 @@ export interface IUserSettings {
     targetTemperature: number;
 }
 
-const handleTargetTemperatureChange = (settings: IUserSettings) => {
-    targetTemperature = settings.targetTemperature;
-}
-
-const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {
-    socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
-
+const updateHeaterState = async (recording: ITemperatureRecording) => {
     if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
-        const response = await axios.get(`${process.env.MEROSS_HOST}/heater?state=1`);
+        const response = await axios.put(`${process.env.MEROSS_HOST}/heater?state=1`);
         if (response.status === 200) {
             heaterState = 'On';
         }
     } else if (recording.temperature > targetTemperature && (heaterState == 'On' || heaterState == 'Undiscovered')) {
         // call api to turn off heater
-        const response = await axios.get(`${process.env.MEROSS_HOST}/heater?state=0`);
+        const response = await axios.put(`${process.env.MEROSS_HOST}/heater?state=0`);
         if (response.status === 200) {
             heaterState = 'Off';
         }
     }
+}
+
+const handleTargetTemperatureChange = async (settings: IUserSettings, deviceId: string) => {
+    targetTemperature = settings.targetTemperature;
+    const recording = deviceMostRecentTemperature[deviceId];
+
+    if (!recording) return;
+    
+    await updateHeaterState(recording);
+}
+
+const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, deviceId: string, monitoringGroupId: string) => {
+    socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
+    deviceMostRecentTemperature[deviceId] = recording;
+
+    await updateHeaterState(recording);
 }
 
 io.on("connection", (socket) => {
@@ -62,12 +74,14 @@ io.on("connection", (socket) => {
 
     console.log("Incoming connection...");
 
+    deviceMostRecentTemperature[deviceId] = { id: "1", temperature: 12, humidity: 12, timeReceived: new Date() }
+
     if (deviceId) {
         console.log("Temperature node connected.");
         socket.join(monitoringGroupId);
 
         socket.on("send-temperature-recording",
-            (recording: ITemperatureRecording) => handleSendTemperatureRecording(recording, socket, monitoringGroupId));
+            (recording: ITemperatureRecording) => handleSendTemperatureRecording(recording, socket, deviceId, monitoringGroupId));
 
     } else if (userId) {
         console.log("User connected.");
