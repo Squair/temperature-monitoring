@@ -10,7 +10,7 @@ load_dotenv()
 
 EMAIL = os.environ.get('MEROSS_EMAIL')
 PASSWORD = os.environ.get('MEROSS_PASSWORD')
-PORT = os.environ.get('PORT')
+HOST = os.environ.get('HOST')
 
 app = Flask(__name__)
 
@@ -74,4 +74,4 @@ async def heater_off():
 
 if __name__ == "__main__":
     from waitress import serve
-    serve(app, host="localhost", port=PORT)
+    serve(app, host=HOST)
