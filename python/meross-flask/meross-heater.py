@@ -67,7 +67,7 @@ async def heater_off():
         # The first time we play with a device, we must update its status
         await device.async_update()
 
-        print(f"Turning on {device.name}...")
+        print(f"Turning off {device.name}...")
         await device.async_turn_off(channel=0)
 
     await close_connection(manager, httpClient)
