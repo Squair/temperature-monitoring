@@ -33,10 +33,10 @@ const handleSendTemperatureRecording = async (recording: ITemperatureRecording, 
 
     if (recording.temperature < targetTemperature) {
         // call api to turn on heater
-        await axios.get(`${process.env.MERROSS_HOST}/turnOn`);
+        await axios.get(`${process.env.MERROSS_HOST}/heater/on`);
     } else if (recording.temperature > targetTemperature) {
         // call api to turn off heater
-        await axios.get(`${process.env.MERROSS_HOST}/turnOff`);
+        await axios.get(`${process.env.MERROSS_HOST}/heater/off`);
     }
 }
 
