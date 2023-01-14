@@ -13,6 +13,9 @@ PASSWORD = os.environ.get('MEROSS_PASSWORD')
 PORT = os.environ.get('PORT')
 HOST = os.environ.get('HOST')
 
+print(EMAIL)
+print(PASSWORD)
+
 app = Flask(__name__)
 
 async def get_plugs(manager: MerossManager):
