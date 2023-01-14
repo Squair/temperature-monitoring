@@ -7,7 +7,6 @@ A system for monitoring temperature recording devices in real-time.
     - pip install aiohttp
     - pip install python-socketio
     - pip install python-dotenv
-    - pip install meross_iot==0.4.5.9
 
  - Installing the I2C Tools to your Raspberry Pi
     - sudo apt update sudo apt full-upgrade
