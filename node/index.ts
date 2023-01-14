@@ -17,6 +17,10 @@ type HeaterState = "Undiscovered" | "On" | "Off"
 
 let heaterState: HeaterState = "Undiscovered";
 
+axios.defaults.headers.common = {
+    "X-API-Key": process.env.KEY,
+};
+
 export interface ITemperatureRecording {
     id: string;
     temperature: number;
@@ -37,12 +41,16 @@ const handleSendTemperatureRecording = async (recording: ITemperatureRecording, 
 
     if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
-        await axios.get(`${process.env.MEROSS_HOST}/heater/on`);
-        heaterState = 'On';
+        const response = await axios.get(`${process.env.MEROSS_HOST}/heater/?state=1`);
+        if (response.status === 200) {
+            heaterState = 'On';
+        }
     } else if (recording.temperature > targetTemperature && (heaterState == 'On' || heaterState == 'Undiscovered')) {
         // call api to turn off heater
-        await axios.get(`${process.env.MEROSS_HOST}/heater/off`);
-        heaterState = 'Off';
+        const response = await axios.get(`${process.env.MEROSS_HOST}/heater/?state=0`);
+        if (response.status === 200) {
+            heaterState = 'Off';
+        }
     }
 }
 

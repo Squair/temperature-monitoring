@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from meross_iot.http_api import MerossHttpClient
 from meross_iot.manager import MerossManager
 
-from flask import Flask
+from flask import Flask, request, jsonify
 
 load_dotenv()
 
@@ -14,6 +14,8 @@ PORT = os.environ.get('PORT')
 HOST = os.environ.get('HOST')
 
 app = Flask(__name__)
+
+startPower=''
 
 async def get_plugs(manager: MerossManager):
     await manager.async_init()
@@ -27,8 +29,18 @@ async def close_connection(manager: MerossManager, httpClient: MerossHttpClient)
     manager.close()
     await httpClient.async_logout()
 
-@app.route("/heater/on")
-async def heater_on():
+def is_authenticated(request):
+    headers = request.headers
+    auth = headers.get("X-Api-Key")
+    return auth == os.environ.get('KEY')
+
+@app.route("/heater")
+async def heater_state_update():
+    if (not is_authenticated(request)):
+        return jsonify({"message": "ERROR: Unauthorized"}), 401
+        
+    state = request.args.get('state')
+
     httpClient = await MerossHttpClient.async_from_user_password(email=EMAIL, password=PASSWORD)
     manager = MerossManager(http_client=httpClient)
 
@@ -44,34 +56,19 @@ async def heater_on():
         # The first time we play with a device, we must update its status
         await device.async_update()
 
-        print(f"Turning on {device.name}...")
-        await device.async_turn_on(channel=0)
+        if (state):
+             print(f"Turning on the {device.name}...")
+             await device.async_turn_on(channel=0)
+             # Read the electricity power/voltage/current
+             startPower = await device.async_get_instant_metrics()
+        else:
+            print(f"Turning off the {device.name}...")
+            await device.async_turn_off(channel=0)
+            endPower = await device.async_get_instant_metrics()
+            print(f"Electricity consumption since on: {endPower}")
 
     await close_connection(manager, httpClient)
-    return "Turned on heater"
-
-@app.route("/heater/off")
-async def heater_off():
-    httpClient = await MerossHttpClient.async_from_user_password(email=EMAIL, password=PASSWORD)
-    manager = MerossManager(http_client=httpClient)
-
-    plugs = await get_plugs(manager)
-
-    if len(plugs) < 1:
-        print("No MSS310 plugs found...")
-    else:
-        # Turn it on channel 0
-        # Note that channel argument is optional for MSS310 as they only have one channel
-        device = plugs[0]
-
-        # The first time we play with a device, we must update its status
-        await device.async_update()
-
-        print(f"Turning off {device.name}...")
-        await device.async_turn_off(channel=0)
-
-    await close_connection(manager, httpClient)
-    return "Turned off heater"
+    return jsonify({"message": "Header turn on"}), 200
 
 if __name__ == "__main__":
     from waitress import serve
