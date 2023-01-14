@@ -41,13 +41,13 @@ const handleSendTemperatureRecording = async (recording: ITemperatureRecording, 
 
     if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
-        const response = await axios.get(`${process.env.MEROSS_HOST}/heater/?state=1`);
+        const response = await axios.get(`${process.env.MEROSS_HOST}/heater?state=1`);
         if (response.status === 200) {
             heaterState = 'On';
         }
     } else if (recording.temperature > targetTemperature && (heaterState == 'On' || heaterState == 'Undiscovered')) {
         // call api to turn off heater
-        const response = await axios.get(`${process.env.MEROSS_HOST}/heater/?state=0`);
+        const response = await axios.get(`${process.env.MEROSS_HOST}/heater?state=0`);
         if (response.status === 200) {
             heaterState = 'Off';
         }
