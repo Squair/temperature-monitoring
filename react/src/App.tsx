@@ -13,6 +13,7 @@ import { Unit } from './type/Unit';
 const App = () => {
   const [socket, setSocket] = useState<Socket>();
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [heaterState, setHeaterState] = useState<boolean>();
   const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>();
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColor, setBackgroundColor] = useState<string>();
@@ -41,9 +42,8 @@ const App = () => {
       setSocket(io(import.meta.env.VITE_SOCKET_HOST, { query: { userId: "1", monitoringGroupId: "1" } }));
     }
 
-    socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => {
-      setCurrentTemperature(recording);
-    });
+    socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => setCurrentTemperature(recording));
+    socket?.on("heater-state-update", (state: boolean) => setHeaterState(state));
 
     // Disconnect socket when component unmounts
     return () => { socket?.disconnect() }
@@ -82,6 +82,8 @@ const App = () => {
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
         {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
+
+      <p style={{ paddingLeft: '0.5em' }}>Heater is {heaterState ? 'on 🔥' : 'off ❄️'}</p>
     </div>
   )
 }

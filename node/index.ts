@@ -56,19 +56,22 @@ const updateHeaterState = async (recording: ITemperatureRecording, deviceId: str
     }
 }
 
-const handleTargetTemperatureChange = async (targetTemperature: number, deviceId: string) => {
+const handleTargetTemperatureChange = async (targetTemperature: number, monitoringGroupId: string, deviceId: string) => {
     targetTemperature = targetTemperature;
     deviceMetadata[deviceId] = { ...deviceMetadata[deviceId], targetTemperature };
 
     if (!deviceMetadata[deviceId]) return;
 
     await updateHeaterState(deviceMetadata[deviceId].mostRecentRecording, deviceId);
+    io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');    
 }
 
 const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, deviceId: string, monitoringGroupId: string) => {
-    socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
     deviceMetadata[deviceId] = { ...deviceMetadata[deviceId], mostRecentRecording: recording };
     await updateHeaterState(recording, deviceId);
+    
+    socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
+    socket.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
 }
 
 io.on("connection", (socket) => {
@@ -90,7 +93,7 @@ io.on("connection", (socket) => {
         console.log("User connected.");
         socket.join(monitoringGroupId);
 
-        socket.on("target-temperature-change", (settings) => handleTargetTemperatureChange(settings.targetTemperature, "1"));
+        socket.on("target-temperature-change", (settings) => handleTargetTemperatureChange(settings.targetTemperature, monitoringGroupId, "1"));
     }
 
     // This will emulate events being recieved and broadcast, for testing purposes only.
