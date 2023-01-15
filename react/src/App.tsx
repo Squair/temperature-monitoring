@@ -24,7 +24,6 @@ const App = () => {
 
   const totalColourScale = 100;
   const minimumTemperature = 13;
-  
   const colors = chroma.scale(["#4287f5", "#f54242"]).colors(totalColourScale);
 
   // Read existing settings on mount.
@@ -53,11 +52,11 @@ const App = () => {
     if (!currentTemperature) return;
 
     // When receiving temperature, calculate the color for the progress
-    
+
     const range = Math.max(1, userSettings.targetTemperature - minimumTemperature);
     const correctedValue = currentTemperature.temperature - minimumTemperature;
     const progressPercentage = Math.floor((correctedValue * 100) / range);
-    
+
     setBackgroundColor(colors[Math.min(colors.length - 1, progressPercentage)]);
   }, [currentTemperature, userSettings.targetTemperature])
 
@@ -83,7 +82,7 @@ const App = () => {
         {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
 
-      <p style={{ paddingLeft: '0.5em' }}>Heater is {heaterState ? 'on 🔥' : 'off ❄️'}</p>
+      <p style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</p>
     </div>
   )
 }
