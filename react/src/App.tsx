@@ -55,7 +55,7 @@ const App = () => {
 
     const range = Math.max(1, userSettings.targetTemperature - minimumTemperature);
     const correctedValue = currentTemperature.temperature - minimumTemperature;
-    const progressPercentage = Math.floor((correctedValue * 100) / range);
+    const progressPercentage = Math.max(0, Math.floor((correctedValue * 100) / range));
 
     setBackgroundColor(colors[Math.min(colors.length - 1, progressPercentage)]);
   }, [currentTemperature, userSettings.targetTemperature])
@@ -82,7 +82,7 @@ const App = () => {
         {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
       </div>
 
-      <p style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</p>
+      <h4 style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</h4>
     </div>
   )
 }
