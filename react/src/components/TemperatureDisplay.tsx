@@ -23,7 +23,7 @@ const TemperatureDisplay: FunctionComponent<TemperatureDisplayProps> = ({ temper
 
     useEffect(() => {
         const isTemperatureTrendingHigher = currentTemperature.temperature >= averageTemperatures(temperatures);
-        const isHumidityTrendingHigher = currentTemperature.temperature >= averageHumidities(temperatures);
+        const isHumidityTrendingHigher = currentTemperature.humidity >= averageHumidities(temperatures);
 
         if (temperatures.length == 1 || temperatures.length % 3 === 0) {
             setIsTrendingHigher({ temperature: isTemperatureTrendingHigher, humidity: isHumidityTrendingHigher });
