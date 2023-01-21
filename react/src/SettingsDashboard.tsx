@@ -17,7 +17,7 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
     const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
     const temperatureUnitSymbol = getTemperatureUnitSymbol(userSettings.unit);
 
-    const onTargetTemperatureTextChange = (event: Event) => {
+    const onTargetTemperatureChange = (event: Event) => {
         const parsedTargetTemperature = parseInt((event.target as any).value);
         const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
         handleUserSettingsChange(({ ...userSettings, targetTemperature: value }));
@@ -52,9 +52,10 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
                 getAriaValueText={temp => `${temp}${temperatureUnitSymbol}`}
                 valueLabelDisplay="auto"
                 defaultValue={18}
+                value={userSettings.targetTemperature ?? 18}
                 max={30}
                 min={0}
-                onChange={(event) => onTargetTemperatureTextChange(event)}
+                onChangeCommitted={(event) => onTargetTemperatureChange(event as Event)}
                 marks={marks}
             />
         </Container>
