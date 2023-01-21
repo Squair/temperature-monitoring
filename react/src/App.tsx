@@ -47,7 +47,7 @@ const App = () => {
     // Disconnect socket when component unmounts
     return () => { socket?.disconnect() }
   }, [socket]);
-
+  
   useEffect(() => {
     if (!currentTemperature) return;
 
@@ -79,7 +79,8 @@ const App = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
-        {currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
+        {socket && currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
+        {(!socket || !socket.connected) && <h3 style={{ textAlign: 'center'}}>Searching for devices...</h3>}
       </div>
 
       <h4 style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</h4>
