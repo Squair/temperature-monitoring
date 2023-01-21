@@ -7,14 +7,14 @@ interface MeasurementProps {
     value: string;
     centerOffset: string;
     isTrendingHigher?: boolean
-    alignTrend: 'left' | 'right'
+    align: 'left' | 'right'
 }
 
-const Measurement: FunctionComponent<MeasurementProps> = ({ name, value, centerOffset, isTrendingHigher, alignTrend }) => {
+const Measurement: FunctionComponent<MeasurementProps> = ({ name, value, centerOffset, isTrendingHigher, align }) => {
     const iconStlying = { height: '2em', width: '2em', alignSelf: 'flex-end' };
 
     return (
-        <div style={{ display: 'flex', flexDirection: alignTrend === 'left' ? 'row' : 'row-reverse', marginTop: centerOffset }}>
+        <div style={{ display: 'flex', flexDirection: align === 'left' ? 'row' : 'row-reverse', marginTop: centerOffset }}>
             {isTrendingHigher
                 ? <KeyboardDoubleArrowUpIcon sx={{ ...iconStlying }} />
                 : <KeyboardDoubleArrowDownIcon sx={{ ...iconStlying }} />}
