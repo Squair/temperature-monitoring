@@ -34,11 +34,11 @@ const TemperatureDisplay: FunctionComponent<TemperatureDisplayProps> = ({ temper
     return (
         <div style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
             
-            <Measurement name='Temperature' value={temperatureDisplay} centerOffset='-10em' isTrendingHigher={isTrendingHigher?.temperature} alignTrend='left' />
+            <Measurement name='Temperature' value={temperatureDisplay} centerOffset='-10em' isTrendingHigher={isTrendingHigher?.temperature} align='left' />
 
             <div style={{ height: '105%', width: '0.25em', borderRadius: '1em', backgroundColor: 'white', transform: 'rotate(20deg)' }} />
 
-            <Measurement name='Humidity' value={humidityDisplay} centerOffset='10em' isTrendingHigher={isTrendingHigher?.humidity} alignTrend='right' />
+            <Measurement name='Humidity' value={humidityDisplay} centerOffset='10em' isTrendingHigher={isTrendingHigher?.humidity} align='right' />
         </div>
     )
 }
