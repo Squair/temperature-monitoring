@@ -18,7 +18,11 @@ const App = () => {
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColor, setBackgroundColor] = useState<string>();
 
-  const deviceId = "1234";
+  const [isTrendingHigher, setIsTrendingHigher] = useState<{ temperature: boolean, humidity: boolean }>({ temperature: false, humidity: false });
+
+  const currentTemperature = temperatures ? temperatures[0] : undefined;
+
+  const deviceId = "1";
 
   const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
 
@@ -71,6 +75,21 @@ const App = () => {
     }
   }
 
+  const averageTemperatures = (temperatures: ITemperatureRecording[]) => temperatures.map(t => t.temperature).reduce((x, i) => x + i, 0) / temperatures.length;
+  const averageHumidities = (temperatures: ITemperatureRecording[]) => temperatures.map(t => t.humidity).reduce((x, i) => x + i, 0) / temperatures.length;
+
+  useEffect(() => {
+    if (!temperatures || !currentTemperature) return;
+    const isTemperatureTrendingHigher = currentTemperature.temperature >= averageTemperatures(temperatures);
+    const isHumidityTrendingHigher = currentTemperature.humidity >= averageHumidities(temperatures);
+
+    if (temperatures.length == 1 || temperatures.length % 3 === 0) {
+      setIsTrendingHigher({ temperature: isTemperatureTrendingHigher, humidity: isHumidityTrendingHigher });
+    }
+
+  }, [temperatures]);
+
+
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
@@ -83,7 +102,7 @@ const App = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
-        {socket && temperatures && !showSettings && <TemperatureDisplay temperatures={temperatures} unit={userSettings.unit} />}
+        {socket && temperatures && !showSettings && <TemperatureDisplay temperatures={temperatures} unit={userSettings.unit} isTrendingHigher={isTrendingHigher} />}
         {(!socket || !socket.connected) && <h3 style={{ textAlign: 'center' }}>Searching for devices...</h3>}
       </div>
 

@@ -11,17 +11,19 @@ interface MeasurementProps {
 }
 
 const Measurement: FunctionComponent<MeasurementProps> = ({ name, value, centerOffset, isTrendingHigher, align }) => {
-    const iconStlying = { height: '2em', width: '2em', alignSelf: 'flex-end' };
+    const iconStlying = { height: '2em', width: '2em', alignSelf: 'center' };
+    const icon = isTrendingHigher
+        ? <KeyboardDoubleArrowUpIcon sx={{ ...iconStlying, textAlign: 'center' }} />
+        : <KeyboardDoubleArrowDownIcon sx={{ ...iconStlying }} />
 
     return (
-        <div style={{ display: 'flex', flexDirection: align === 'left' ? 'row' : 'row-reverse', marginTop: centerOffset }}>
-            {isTrendingHigher
-                ? <KeyboardDoubleArrowUpIcon sx={{ ...iconStlying }} />
-                : <KeyboardDoubleArrowDownIcon sx={{ ...iconStlying }} />}
-
+        <div style={{ display: 'flex', marginTop: centerOffset }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <p style={{ textAlign: 'center' }}>{name}</p>
-                <h1 style={{ fontSize: '2.5em' }}>{value}</h1>
+                <div style={{ display: 'flex', flexDirection: align === 'left' ? 'row' : 'row-reverse' }}>
+                    {icon}
+                    <h1 style={{ fontSize: '2.5em' }}>{value}</h1>
+                </div>
             </div>
         </div>
     )
