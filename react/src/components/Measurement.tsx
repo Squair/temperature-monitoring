@@ -21,7 +21,7 @@ const Measurement: FunctionComponent<MeasurementProps> = ({ name, value, centerO
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <p style={{ textAlign: 'center' }}>{name}</p>
-                <h1 style={{ padding: 0, margin: 0 }}>{value}</h1>
+                <h1 style={{ fontSize: '2.5em' }}>{value}</h1>
             </div>
         </div>
     )
