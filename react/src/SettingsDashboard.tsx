@@ -1,5 +1,5 @@
-import { Container, InputAdornment, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ChangeEvent, FunctionComponent, SetStateAction } from "react";
+import { Container, Slider, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { FunctionComponent } from "react";
 import { getTargetTemperatureCacheKey, unitCacheKey } from "./constants";
 import { useTemperatureUtilities } from "./hooks/useTemperatureUtilities";
 import { IUserSettings } from "./interface/IUserSettings";
@@ -15,9 +15,10 @@ interface SettingsDashboardProps {
 const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, handleUserSettingsChange }) => {
     const { getTemperatureUnitSymbol } = useTemperatureUtilities();
     const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
+    const temperatureUnitSymbol = getTemperatureUnitSymbol(userSettings.unit);
 
-    const onTargetTemperatureTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const parsedTargetTemperature = parseInt(event.target.value);
+    const onTargetTemperatureTextChange = (event: Event) => {
+        const parsedTargetTemperature = parseInt((event.target as any).value);
         const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
         handleUserSettingsChange(({ ...userSettings, targetTemperature: value }));
         localStorage.setItem(targetTemperatureCacheKey, value.toString());
@@ -30,26 +31,31 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
 
     if (!open) return (null);
 
+    const marks = [0, 5, 10, 15, 20, 25, 30].map(x => ({ value: x, label: `${x}${temperatureUnitSymbol}` }));
+
     return (
-        <Container maxWidth='md' sx={{ display: 'flex', gap: '1em', flexDirection: 'column' }}>
+        <Container maxWidth='md' sx={{ display: 'flex', gap: '3em', flexDirection: 'row', height: '70%', width: '100%', justifyContent: 'center' }}>
             <ToggleButtonGroup
                 value={userSettings.unit}
                 exclusive
                 onChange={handleUnitChange}
                 aria-label="Unit selection"
+                sx={{ alignItems: 'center' }}
             >
                 <ToggleButton value="celsius" aria-label="celsius" children="Celsius" />
                 <ToggleButton value="fahrenheit" aria-label="fahrenheit" children="Fahrenheit" />
             </ToggleButtonGroup>
 
-            <TextField
-                onChange={onTargetTemperatureTextChange}
-                value={userSettings.targetTemperature}
-                variant='outlined'
-                label='Target temperature'
-                InputProps={{
-                    endAdornment: <InputAdornment position="end">{getTemperatureUnitSymbol(userSettings.unit)}</InputAdornment>
-                }}
+            <Slider
+                aria-label="Temperature"
+                orientation="vertical"
+                getAriaValueText={temp => `${temp}${temperatureUnitSymbol}`}
+                valueLabelDisplay="auto"
+                defaultValue={18}
+                max={30}
+                min={0}
+                onChange={(event) => onTargetTemperatureTextChange(event)}
+                marks={marks}
             />
         </Container>
     )
