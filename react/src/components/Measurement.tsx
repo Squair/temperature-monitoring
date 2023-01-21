@@ -22,7 +22,7 @@ const Measurement: FunctionComponent<MeasurementProps> = ({ name, value, centerO
                 <p style={{ textAlign: 'center' }}>{name}</p>
                 <div style={{ display: 'flex', flexDirection: align === 'left' ? 'row' : 'row-reverse' }}>
                     {icon}
-                    <h1 style={{ fontSize: '2.5em' }}>{value}</h1>
+                    <h1 style={{ fontSize: '2.5em', padding: 0, margin: 0 }}>{value}</h1>
                 </div>
             </div>
         </div>
