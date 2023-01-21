@@ -62,9 +62,11 @@ const App = () => {
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
-  const handleUserSettingsChange = async (settings: IUserSettings) => {
-    socket?.emit("target-temperature-change", { targetTemperature: settings.targetTemperature });
+  const handleUserSettingsChange = async (settings: IUserSettings, emit: boolean) => {
     setUserSettings(settings);
+    if (emit) {
+      socket?.emit("target-temperature-change", { targetTemperature: settings.targetTemperature });
+    }
   }
 
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp

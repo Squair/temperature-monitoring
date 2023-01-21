@@ -9,7 +9,7 @@ interface SettingsDashboardProps {
     open?: boolean;
     deviceId: string;
     userSettings: IUserSettings;
-    handleUserSettingsChange: (settings: IUserSettings) => Promise<void>;
+    handleUserSettingsChange: (settings: IUserSettings, emit: boolean) => Promise<void>;
 }
 
 const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, deviceId, userSettings, handleUserSettingsChange }) => {
@@ -20,12 +20,16 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
     const onTargetTemperatureChange = (event: Event) => {
         const parsedTargetTemperature = parseInt((event.target as any).value);
         const value = isNaN(parsedTargetTemperature) ? 0 : parsedTargetTemperature;
-        handleUserSettingsChange(({ ...userSettings, targetTemperature: value }));
-        localStorage.setItem(targetTemperatureCacheKey, value.toString());
+        handleUserSettingsChange(({ ...userSettings, targetTemperature: value }), false);
+    }
+
+    const onTargetTemperatureChangeCommit = () => {
+        handleUserSettingsChange(({ ...userSettings }), true);
+        localStorage.setItem(targetTemperatureCacheKey, userSettings.targetTemperature.toString());
     }
 
     const handleUnitChange = (_: React.MouseEvent<HTMLElement>, newUnit: Unit,) => {
-        handleUserSettingsChange({ ...userSettings, unit: newUnit });
+        handleUserSettingsChange({ ...userSettings, unit: newUnit }, false);
         localStorage.setItem(unitCacheKey, newUnit);
     }
 
@@ -51,11 +55,12 @@ const SettingsDashboard: FunctionComponent<SettingsDashboardProps> = ({ open, de
                 orientation="vertical"
                 getAriaValueText={temp => `${temp}${temperatureUnitSymbol}`}
                 valueLabelDisplay="auto"
-                defaultValue={18}
+                defaultValue={userSettings.targetTemperature ?? 18}
                 value={userSettings.targetTemperature ?? 18}
                 max={30}
                 min={0}
-                onChangeCommitted={(event) => onTargetTemperatureChange(event as Event)}
+                onChange={(event) => onTargetTemperatureChange(event)}
+                onChangeCommitted={onTargetTemperatureChangeCommit}
                 marks={marks}
             />
         </Container>
