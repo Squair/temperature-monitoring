@@ -14,7 +14,7 @@ const App = () => {
   const [socket, setSocket] = useState<Socket>();
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [heaterState, setHeaterState] = useState<boolean>();
-  const [currentTemperature, setCurrentTemperature] = useState<ITemperatureRecording>();
+  const [temperatures, setTemperatures] = useState<ITemperatureRecording[]>();
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
   const [backgroundColor, setBackgroundColor] = useState<string>();
 
@@ -41,24 +41,26 @@ const App = () => {
       setSocket(io(import.meta.env.VITE_SOCKET_HOST, { query: { userId: "1", monitoringGroupId: "1" } }));
     }
 
-    socket?.on("recieve-temperature-recording", (recording: ITemperatureRecording) => setCurrentTemperature(recording));
+    socket?.on("recieve-temperature-recording",
+      (recording: ITemperatureRecording) => setTemperatures(temps => [recording, ...temps ?? []]));
+
     socket?.on("heater-state-update", (state: boolean) => setHeaterState(state));
 
     // Disconnect socket when component unmounts
     return () => { socket?.disconnect() }
   }, [socket]);
-  
+
   useEffect(() => {
-    if (!currentTemperature) return;
+    if (!temperatures) return;
 
     // When receiving temperature, calculate the color for the progress
 
     const range = Math.max(1, userSettings.targetTemperature - minimumTemperature);
-    const correctedValue = currentTemperature.temperature - minimumTemperature;
+    const correctedValue = temperatures[0].temperature - minimumTemperature;
     const progressPercentage = Math.max(0, Math.floor((correctedValue * 100) / range));
 
     setBackgroundColor(colors[Math.min(colors.length - 1, progressPercentage)]);
-  }, [currentTemperature, userSettings.targetTemperature])
+  }, [temperatures, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
 
@@ -73,7 +75,7 @@ const App = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'absolute' }}>
-        {currentTemperature && <h4 style={{ paddingLeft: '0.5em' }}>Last received: {new Date(currentTemperature.timeReceived).toLocaleString()}</h4>}
+        {temperatures && <h4 style={{ paddingLeft: '0.5em' }}>Last received: {new Date(temperatures[0].timeReceived).toLocaleString()}</h4>}
         <IconButton onClick={toggleSettings} >
           <SettingsIcon />
         </IconButton>
@@ -81,8 +83,8 @@ const App = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
-        {socket && currentTemperature && !showSettings && <TemperatureDisplay currentTemperature={currentTemperature} unit={userSettings.unit} />}
-        {(!socket || !socket.connected) && <h3 style={{ textAlign: 'center'}}>Searching for devices...</h3>}
+        {socket && temperatures && !showSettings && <TemperatureDisplay temperatures={temperatures} unit={userSettings.unit} />}
+        {(!socket || !socket.connected) && <h3 style={{ textAlign: 'center' }}>Searching for devices...</h3>}
       </div>
 
       <h4 style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</h4>
