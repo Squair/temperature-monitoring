@@ -16,8 +16,8 @@ type HeaterState = "Undiscovered" | "On" | "Off"
 
 let heaterState: HeaterState = "Undiscovered";
 
-const deviceMetadata: {
-    [key: string]: {
+const deviceMonitoringGroupMetadata: {
+    [monitoringGroupId: string]: {
         mostRecentRecording?: ITemperatureRecording;
         targetTemperature?: number
     }
@@ -38,8 +38,8 @@ export interface IUserSettings {
     targetTemperature: number;
 }
 
-const updateHeaterState = async (recording: ITemperatureRecording, deviceId: string) => {
-    const targetTemperature = deviceMetadata[deviceId].targetTemperature;
+const updateHeaterState = async (recording: ITemperatureRecording, monitoringGroupId: string) => {
+    const targetTemperature = deviceMonitoringGroupMetadata[monitoringGroupId].targetTemperature;
 
     if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
@@ -56,20 +56,20 @@ const updateHeaterState = async (recording: ITemperatureRecording, deviceId: str
     }
 }
 
-const handleTargetTemperatureChange = async (targetTemperature: number, monitoringGroupId: string, deviceId: string) => {
+const handleTargetTemperatureChange = async (targetTemperature: number, monitoringGroupId: string) => {
     targetTemperature = targetTemperature;
-    deviceMetadata[deviceId] = { ...deviceMetadata[deviceId], targetTemperature };
+    deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], targetTemperature };
 
-    if (!deviceMetadata[deviceId] || !deviceMetadata[deviceId]?.mostRecentRecording) return;
+    if (!deviceMonitoringGroupMetadata[monitoringGroupId] || !deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) return;
 
-    await updateHeaterState(deviceMetadata[deviceId].mostRecentRecording, deviceId);
-    io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');    
+    await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].mostRecentRecording, monitoringGroupId);
+    io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
 }
 
-const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, deviceId: string, monitoringGroupId: string) => {
-    deviceMetadata[deviceId] = { ...deviceMetadata[deviceId], mostRecentRecording: recording };
-    await updateHeaterState(recording, deviceId);
-    
+const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {
+    deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], mostRecentRecording: recording };
+    await updateHeaterState(recording, monitoringGroupId);
+
     socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
     socket.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
 }
@@ -87,13 +87,18 @@ io.on("connection", (socket) => {
         socket.join(monitoringGroupId);
 
         socket.on("send-temperature-recording",
-            (recording: ITemperatureRecording) => handleSendTemperatureRecording(recording, socket, deviceId, monitoringGroupId));
+            (recording: ITemperatureRecording) => handleSendTemperatureRecording(recording, socket, monitoringGroupId));
 
     } else if (userId) {
         console.log("User connected.");
         socket.join(monitoringGroupId);
 
-        socket.on("target-temperature-change", (settings) => handleTargetTemperatureChange(settings.targetTemperature, monitoringGroupId, "1"));
+        socket.on("target-temperature-change", (settings) => handleTargetTemperatureChange(settings.targetTemperature, monitoringGroupId));
+
+        // Send most recent recording straight away rathert than waiting for next recording to come through.
+        if (deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) {
+            io.to(monitoringGroupId).emit("recieve-temperature-recording", deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording);
+        }
     }
 
     // This will emulate events being recieved and broadcast, for testing purposes only.
