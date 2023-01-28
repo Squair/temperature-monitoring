@@ -45,7 +45,7 @@ def reset_i2c_bus():
     #     GPIO.output(5, GPIO.HIGH)
     
     # Yes this is gross, but only way I've found to potentially recover i2c bus
-    requests.put(f'{os.environ.get("MEROSS_FLASK_HOST")}/reset')
+    requests.put(f'{os.environ.get("MEROSS_FLASK_HOST")}/reset', headers={'X-API-KEY': os.environ.get("MEROSS_FLASK_API_KEY")})
 
 def read_sensor_values():
     bus = smbus.SMBus(1)
