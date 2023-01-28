@@ -34,6 +34,44 @@ def is_authenticated(request):
     auth = headers.get("X-Api-Key")
     return auth == os.environ.get('KEY')
 
+async def handle_device_state_update(device, state):
+        # The first time we play with a device, we must update its status
+        await device.async_update()
+
+        if (state == "1"):
+            print(f"Turning on the {device.name}...")
+            await device.async_turn_on(channel=0)
+            # Read the electricity power/voltage/current
+            startPower = await device.async_get_instant_metrics()
+        elif (state == "0"):
+            print(f"Turning off the {device.name}...")
+            await device.async_turn_off(channel=0)
+            endPower = await device.async_get_instant_metrics()
+            print(f"Electricity consumption since on: {endPower}")
+
+@app.route("/raspberry-pi", methods = ["PUT"])
+async def raspberry_pi_state_update():
+    if (not is_authenticated(request)):
+        return jsonify({"message": "ERROR: Unauthorized"}), 401
+        
+    state = request.args.get('state')
+
+    httpClient = await MerossHttpClient.async_from_user_password(email=EMAIL, password=PASSWORD)
+    manager = MerossManager(http_client=httpClient)
+
+    plugs = await get_plugs(manager)
+    matches = list((x for x in plugs if x.name == "raspberry-pi"))
+
+    if len(matches) < 1:
+        print("No MSS310 plugs found called raspberry pi...")
+    else:
+        await handle_device_state_update(matches[0], state)
+
+    await close_connection(manager, httpClient)
+
+    message = "off" if not int(state) else "on" 
+    return jsonify({"message": f"raspberry-pi turned {message}"}), 200
+
 @app.route("/heater", methods = ["PUT"])
 async def heater_state_update():
     if (not is_authenticated(request)):
@@ -49,28 +87,12 @@ async def heater_state_update():
     if len(plugs) < 1:
         print("No MSS310 plugs found...")
     else:
-        # Turn it on channel 0
-        # Note that channel argument is optional for MSS310 as they only have one channel
-        device = plugs[0]
-
-        # The first time we play with a device, we must update its status
-        await device.async_update()
-
-        if (state == "1"):
-             print(f"Turning on the {device.name}...")
-             await device.async_turn_on(channel=0)
-             # Read the electricity power/voltage/current
-             startPower = await device.async_get_instant_metrics()
-        elif (state == "0"):
-            print(f"Turning off the {device.name}...")
-            await device.async_turn_off(channel=0)
-            endPower = await device.async_get_instant_metrics()
-            print(f"Electricity consumption since on: {endPower}")
+        await handle_device_state_update(plugs[0], state)
 
     await close_connection(manager, httpClient)
 
-    message = "off" if not state else "on" 
-    return jsonify({"message": f"Header turned {message}"}), 200
+    message = "off" if not int(state) else "on" 
+    return jsonify({"message": f"Heater turned {message}"}), 200
 
 if __name__ == "__main__":
     from waitress import serve
