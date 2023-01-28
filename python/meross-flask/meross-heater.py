@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 from dotenv import load_dotenv
@@ -49,13 +50,11 @@ async def handle_device_state_update(device, state):
             endPower = await device.async_get_instant_metrics()
             print(f"Electricity consumption since on: {endPower}")
 
-@app.route("/raspberry-pi", methods = ["PUT"])
+@app.route("/raspberry-pi/reset", methods = ["PUT"])
 async def raspberry_pi_state_update():
     if (not is_authenticated(request)):
         return jsonify({"message": "ERROR: Unauthorized"}), 401
         
-    state = request.args.get('state')
-
     httpClient = await MerossHttpClient.async_from_user_password(email=EMAIL, password=PASSWORD)
     manager = MerossManager(http_client=httpClient)
 
@@ -65,12 +64,14 @@ async def raspberry_pi_state_update():
     if len(matches) < 1:
         print("No MSS310 plugs found called raspberry pi...")
     else:
-        await handle_device_state_update(matches[0], state)
+        device = matches[0]
+        await device.async_turn_off(channel=0)
+        await asyncio.sleep(0.5)
+        await device.async_turn_on(channel=0)
 
     await close_connection(manager, httpClient)
 
-    message = "off" if not int(state) else "on" 
-    return jsonify({"message": f"raspberry-pi turned {message}"}), 200
+    return jsonify({"message": f"raspberry-pi power cycled"}), 200
 
 @app.route("/heater", methods = ["PUT"])
 async def heater_state_update():
