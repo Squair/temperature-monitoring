@@ -4,7 +4,7 @@ import chroma from "chroma-js";
 import { useEffect, useState } from 'react';
 import { io, Socket } from "socket.io-client";
 import TemperatureDisplay from './components/TemperatureDisplay';
-import { getTargetTemperatureCacheKey, unitCacheKey } from './constants';
+import { getTargetTemperatureCacheKey, getTargetTemperatureToleranceCacheKey, unitCacheKey } from './constants';
 import { ITemperatureRecording } from './interface/ITemperatureRecording';
 import { IUserSettings } from './interface/IUserSettings';
 import SettingsDashboard from './SettingsDashboard';
@@ -15,7 +15,7 @@ const App = () => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [heaterState, setHeaterState] = useState<boolean>();
   const [temperatures, setTemperatures] = useState<ITemperatureRecording[]>();
-  const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 70 });
+  const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 18, targetTemperatureTolerance: 1 });
   const [backgroundColor, setBackgroundColor] = useState<string>();
 
   const [isTrendingHigher, setIsTrendingHigher] = useState<{ temperature: boolean, humidity: boolean }>({ temperature: false, humidity: false });
@@ -25,6 +25,7 @@ const App = () => {
   const deviceId = "1";
 
   const targetTemperatureCacheKey = getTargetTemperatureCacheKey(deviceId);
+  const targetTemperatureToleranceCacheKey = getTargetTemperatureToleranceCacheKey(deviceId);
 
   const totalColourScale = 100;
   const minimumTemperature = 13;
@@ -33,10 +34,16 @@ const App = () => {
   // Read existing settings on mount.
   useEffect(() => {
     const cachedTargetTemperature = localStorage.getItem(targetTemperatureCacheKey);
+    const cacheTargetTemperatureTolerance = localStorage.getItem(targetTemperatureToleranceCacheKey);
     const cachedUnit = localStorage.getItem(unitCacheKey) as Unit;
     const parsedTargetTemperature = parseInt(cachedTargetTemperature ?? "0");
+    const parsedTargetTemperatureTolerance = parseInt(cacheTargetTemperatureTolerance ?? "0");
 
-    setUserSettings({ targetTemperature: parsedTargetTemperature, unit: cachedUnit });
+    setUserSettings({
+      targetTemperature: parsedTargetTemperature,
+      targetTemperatureTolerance: parsedTargetTemperatureTolerance,
+      unit: cachedUnit
+    });
   }, []);
 
   useEffect(() => {
@@ -71,7 +78,7 @@ const App = () => {
   const handleUserSettingsChange = async (settings: IUserSettings, emit: boolean) => {
     setUserSettings(settings);
     if (emit) {
-      socket?.emit("target-temperature-change", { targetTemperature: settings.targetTemperature });
+      socket?.emit("user-settings-change", { ...userSettings, targetTemperatureTolerance: userSettings.targetTemperatureTolerance / 2 });
     }
   }
 

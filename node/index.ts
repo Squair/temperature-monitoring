@@ -19,7 +19,8 @@ let heaterState: HeaterState = "Undiscovered";
 const deviceMonitoringGroupMetadata: {
     [monitoringGroupId: string]: {
         mostRecentRecording?: ITemperatureRecording;
-        targetTemperature?: number
+        targetTemperature?: number;
+        targetTemperatureTolerance?: number;
     }
 } = {}
 
@@ -36,10 +37,11 @@ export interface ITemperatureRecording {
 
 export interface IUserSettings {
     targetTemperature: number;
+    targetTemperatureTolerance: number;
 }
 
 const updateHeaterState = async (recording: ITemperatureRecording, monitoringGroupId: string) => {
-    const targetTemperature = deviceMonitoringGroupMetadata[monitoringGroupId].targetTemperature;
+    const { targetTemperature, targetTemperatureTolerance } = deviceMonitoringGroupMetadata[monitoringGroupId];
 
     if (recording.temperature < targetTemperature && (heaterState == 'Off' || heaterState == 'Undiscovered')) {
         // call api to turn on heater
@@ -47,7 +49,9 @@ const updateHeaterState = async (recording: ITemperatureRecording, monitoringGro
         if (response.status === 200) {
             heaterState = 'On';
         }
-    } else if (recording.temperature > targetTemperature && (heaterState == 'On' || heaterState == 'Undiscovered')) {
+    
+    // Only turn off after temperature reaches target temp including the tolerance for buffer to stop turning on / off rapidly
+    } else if (recording.temperature > (targetTemperature + targetTemperatureTolerance) && (heaterState == 'On' || heaterState == 'Undiscovered')) {
         // call api to turn off heater
         const response = await axios.put(`${process.env.MEROSS_HOST}/heater?state=0`);
         if (response.status === 200) {
@@ -56,14 +60,22 @@ const updateHeaterState = async (recording: ITemperatureRecording, monitoringGro
     }
 }
 
+const handleUserSettingsChange = async (settings: IUserSettings, monitoringGroupId: string) => {
+    await handleTargetTemperatureChange(settings.targetTemperature, monitoringGroupId);
+    await handleTargetTemperatureToleranceChange(settings.targetTemperatureTolerance, monitoringGroupId);
+}
+
 const handleTargetTemperatureChange = async (targetTemperature: number, monitoringGroupId: string) => {
-    targetTemperature = targetTemperature;
     deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], targetTemperature };
 
     if (!deviceMonitoringGroupMetadata[monitoringGroupId] || !deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) return;
 
     await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].mostRecentRecording, monitoringGroupId);
     io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
+}
+
+const handleTargetTemperatureToleranceChange = async (targetTemperatureTolerance: number, monitoringGroupId: string) => {
+    deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], targetTemperatureTolerance };
 }
 
 const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {
@@ -93,7 +105,7 @@ io.on("connection", (socket) => {
         console.log("User connected.");
         socket.join(monitoringGroupId);
 
-        socket.on("target-temperature-change", (settings) => handleTargetTemperatureChange(settings.targetTemperature, monitoringGroupId));
+        socket.on("user-settings-change", (settings: IUserSettings) => handleUserSettingsChange(settings, monitoringGroupId));
 
         // Send most recent recording straight away rathert than waiting for next recording to come through.
         if (deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) {
