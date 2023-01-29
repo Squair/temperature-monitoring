@@ -45,7 +45,7 @@ def reset_i2c_bus():
     #     GPIO.output(5, GPIO.HIGH)
     
     # Yes this is gross, but only way I've found to potentially recover i2c bus
-    requests.put(f'{os.environ.get("MEROSS_FLASK_HOST")}/reset', headers={'X-API-KEY': os.environ.get("MEROSS_FLASK_API_KEY")})
+    requests.put(f'{os.environ.get("MEROSS_FLASK_HOST")}/raspberry-pi/reset', headers={'X-API-KEY': os.environ.get("MEROSS_FLASK_API_KEY")})
 
 def read_sensor_values():
     bus = smbus.SMBus(1)
@@ -80,7 +80,6 @@ def read_sensor_values():
 
 async def main():
     socketHost = os.environ.get("SOCKET_HOST")
-    
     while(1):
         try:
             await asyncio.sleep(3)
