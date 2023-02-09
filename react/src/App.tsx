@@ -102,7 +102,7 @@ const App = () => {
 
   // Color shifting background, warm / cool gradiant, dependant on current temp and target temp
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
+    <div style={{ display: 'flex', gap: '1em', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'absolute' }}>
         <h4 style={{ paddingLeft: '0.5em' }}>Last received: {temperatures ? new Date(temperatures[0].timeReceived).toLocaleString() : "unknown"}</h4>
 
