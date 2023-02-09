@@ -13,6 +13,7 @@ load_dotenv()
 sio = socketio.AsyncClient()
 i2c_address = 0x44
 i2c_clock_pin = 0x03
+renew_socket_connection_timeout_in_seconds = 300
 
 @sio.event
 def connect():
@@ -66,9 +67,7 @@ def read_sensor_values():
     humidity = 100 * (data[3] * 256 + data[4]) / 65535.0
     
     # Output data to screen
-    print(f"{str(datetime.now())} - Temperature in Celsius is : %.2f C" %cTemp)
-    print(f"{str(datetime.now())} - Temperature in Fahrenheit is : %.2f F" %fTemp)
-    print(f"{str(datetime.now())} - Relative Humidity is : %.2f %%RH" %humidity)
+    print(f"{str(datetime.now())} - C: {cTemp} | F: {fTemp} | H: {humidity}")
 
     temperatureRecording = {
             'id': str(uuid.uuid4()),
@@ -80,14 +79,29 @@ def read_sensor_values():
 
 async def main():
     socketHost = os.environ.get("SOCKET_HOST")
+    timeLastConnected = datetime.now()
+
     while(1):
         try:
             await asyncio.sleep(3)
+
+            # Try read temperature first, i2c bus might be stuck and causing chaos, so this will at least cause a reset if it throws
+            temperature_recording = read_sensor_values()
+
+            # After long periods of running, socket reports connected although server does not receive emitted events.
+            # This will simply force closing and then re-open a new connection after a certain time has elapsed.
+            if(sio.connected and (datetime.now() - timeLastConnected).total_seconds() >= renew_socket_connection_timeout_in_seconds):
+                print(f"{str(datetime.now())} - Renew socket timeout reached, disconnecting from socket server")
+                await sio.disconnect()
+
             if (not sio.connected):
+                print(f"{str(datetime.now())} - Attempting to connect to socket server...")
                 await sio.connect(f'{socketHost}?deviceId=1&monitoringGroupId=1')
+                timeLastConnected = datetime.now()
 
             if (sio.connected):
-                await sio.emit('send-temperature-recording', read_sensor_values())
+                await sio.emit('send-temperature-recording', temperature_recording)
+
         except IOError:
             # I2c bus will start timing out as clock pin can get stuck low, 
             print(f"{str(datetime.now())} - I/O error, likely i2c bus is dead, attempting to reset...")
@@ -95,6 +109,5 @@ async def main():
             print(f"{str(datetime.now())} - Reset complete")
         except Exception as e:
             print(f"{str(datetime.now())} - Exception caught: {str(e)}")
-            await sio.disconnect()
 
 asyncio.run(main())  # main loop
