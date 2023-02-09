@@ -55,7 +55,10 @@ const App = () => {
     }
 
     socket?.on("recieve-temperature-recording",
-      (recording: ITemperatureRecording) => setTemperatures(temps => [recording, ...temps ?? []]));
+      (recording: ITemperatureRecording | ITemperatureRecording[]) => Array.isArray(recording)
+        ? setTemperatures(temps => [...recording, ...temps ?? []])
+        : setTemperatures(temps => [recording, ...temps ?? []])
+    );
 
     socket?.on("heater-state-update", (state: boolean) => setHeaterState(state));
 

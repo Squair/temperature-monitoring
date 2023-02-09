@@ -1,8 +1,6 @@
+import axios from 'axios';
 import { config } from 'dotenv';
 import { Server, Socket } from "socket.io";
-import { v4 as uuidv4 } from 'uuid';
-import { useStubTemperatureRecordingEvents } from './src/stubEvents';
-import axios from 'axios';
 
 // Load variables from .env into process
 config();
@@ -11,14 +9,16 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS;
 const port = process.env.PORT;
 
 const io = new Server(parseInt(port), { cors: { origin: "*" } });
+const pollingRateInSeconds = 3;
 
 type HeaterState = "Undiscovered" | "On" | "Off"
 
+let stubsInvoked = false;
 let heaterState: HeaterState = "Undiscovered";
 
 const deviceMonitoringGroupMetadata: {
     [monitoringGroupId: string]: {
-        mostRecentRecording?: ITemperatureRecording;
+        recordings?: ITemperatureRecording[];
         targetTemperature?: number;
         targetTemperatureTolerance?: number;
     }
@@ -68,9 +68,9 @@ const handleUserSettingsChange = async (settings: IUserSettings, monitoringGroup
 const handleTargetTemperatureChange = async (targetTemperature: number, monitoringGroupId: string) => {
     deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], targetTemperature };
 
-    if (!deviceMonitoringGroupMetadata[monitoringGroupId] || !deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) return;
+    if (!deviceMonitoringGroupMetadata[monitoringGroupId] || !deviceMonitoringGroupMetadata[monitoringGroupId]?.recordings) return;
 
-    await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].mostRecentRecording, monitoringGroupId);
+    await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].recordings[-1], monitoringGroupId);
     io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
 }
 
@@ -78,8 +78,24 @@ const handleTargetTemperatureToleranceChange = async (targetTemperatureTolerance
     deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], targetTemperatureTolerance };
 }
 
-const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {
-    deviceMonitoringGroupMetadata[monitoringGroupId] = { ...deviceMonitoringGroupMetadata[monitoringGroupId], mostRecentRecording: recording };
+const handleSendTemperatureRecording = async (recording: ITemperatureRecording, socket: Socket, monitoringGroupId: string) => {    
+    if (deviceMonitoringGroupMetadata[monitoringGroupId]) {
+        deviceMonitoringGroupMetadata[monitoringGroupId] = { 
+            ...deviceMonitoringGroupMetadata[monitoringGroupId], 
+            recordings: [recording, ...deviceMonitoringGroupMetadata[monitoringGroupId]?.recordings ?? []] 
+        };    
+    } else {
+        deviceMonitoringGroupMetadata[monitoringGroupId] = { 
+            recordings: [recording] 
+        };    
+    }
+
+    // Only keep the last 4 hours worth of recordings in memory as eco dyno max is 512mb
+    // 4 hours worth of recordings every three seconds should be around 312mb
+    if (deviceMonitoringGroupMetadata[monitoringGroupId].recordings.length > (4 * 60 * 60) / pollingRateInSeconds) {
+        deviceMonitoringGroupMetadata[monitoringGroupId].recordings.pop();
+    }
+
     await updateHeaterState(recording, monitoringGroupId);
 
     socket.to(monitoringGroupId).emit("recieve-temperature-recording", recording);
@@ -107,18 +123,36 @@ io.on("connection", (socket) => {
 
         socket.on("user-settings-change", (settings: IUserSettings) => handleUserSettingsChange(settings, monitoringGroupId));
 
-        // Send most recent recording straight away rathert than waiting for next recording to come through.
-        if (deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording) {
-            io.to(monitoringGroupId).emit("recieve-temperature-recording", deviceMonitoringGroupMetadata[monitoringGroupId]?.mostRecentRecording);
+        // Send most recent recordings straight away rathert than waiting for next recording to come through.
+        if (deviceMonitoringGroupMetadata[monitoringGroupId]?.recordings) {
+            io.to(monitoringGroupId).emit("recieve-temperature-recording", deviceMonitoringGroupMetadata[monitoringGroupId]?.recordings);
         }
     }
 
     // This will emulate events being recieved and broadcast, for testing purposes only.
-    if (process.env.USE_EVENT_STUBS === "true") {
+    if (process.env.USE_EVENT_STUBS === "true" && !stubsInvoked) {
         console.log("Using event stubs");
-
+        stubsInvoked = true;
         useStubTemperatureRecordingEvents(socket, monitoringGroupId, 5000);
     }
 
     socket.on("disconnect", () => { });
 });
+
+const useStubTemperatureRecordingEvents = async (socket: Socket, roomId: string, delayInMilliseconds: number) => {
+    let i = 0;
+    while (i++ <= 35) {
+        
+        i >= 35 ? 0 : i;
+
+        const tr: ITemperatureRecording = {
+            id: i.toString(),
+            humidity: i + Math.random(),
+            temperature: i + Math.random(),
+            timeReceived: new Date()
+        }
+
+        await handleSendTemperatureRecording(tr, socket, roomId);
+        await new Promise(r => setTimeout(r, delayInMilliseconds));
+    }
+}
