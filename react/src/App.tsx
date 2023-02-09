@@ -1,8 +1,9 @@
-import { Settings as SettingsIcon } from '@mui/icons-material';
+import { Settings as SettingsIcon, QueryStats as QueryStatsIcon } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import chroma from "chroma-js";
 import { useEffect, useState } from 'react';
 import { io, Socket } from "socket.io-client";
+import RealtimeTemperatureChart from './components/RealtimeTemperatureChart';
 import TemperatureDisplay from './components/TemperatureDisplay';
 import { getTargetTemperatureCacheKey, getTargetTemperatureToleranceCacheKey, unitCacheKey } from './constants';
 import { ITemperatureRecording } from './interface/ITemperatureRecording';
@@ -13,6 +14,7 @@ import { Unit } from './type/Unit';
 const App = () => {
   const [socket, setSocket] = useState<Socket>();
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showChart, setShowChart] = useState<boolean>(false);
   const [heaterState, setHeaterState] = useState<boolean>();
   const [temperatures, setTemperatures] = useState<ITemperatureRecording[]>();
   const [userSettings, setUserSettings] = useState<IUserSettings>({ unit: 'celsius', targetTemperature: 18, targetTemperatureTolerance: 1 });
@@ -74,6 +76,7 @@ const App = () => {
   }, [temperatures, userSettings.targetTemperature])
 
   const toggleSettings = () => setShowSettings(!showSettings);
+  const toggleChart = () => setShowChart(!showChart);
 
   const handleUserSettingsChange = async (settings: IUserSettings, emit: boolean) => {
     setUserSettings(settings);
@@ -102,18 +105,27 @@ const App = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', position: 'absolute' }}>
         <h4 style={{ paddingLeft: '0.5em' }}>Last received: {temperatures ? new Date(temperatures[0].timeReceived).toLocaleString() : "unknown"}</h4>
-        <IconButton onClick={toggleSettings} >
-          <SettingsIcon />
-        </IconButton>
+
+        <div>
+          <IconButton onClick={toggleChart} >
+            <QueryStatsIcon />
+          </IconButton>
+          <IconButton onClick={toggleSettings} >
+            <SettingsIcon />
+          </IconButton>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', width: '100%' }}>
         <SettingsDashboard open={showSettings} deviceId={deviceId} userSettings={userSettings} handleUserSettingsChange={handleUserSettingsChange} />
-        {socket && temperatures && !showSettings && <TemperatureDisplay temperatures={temperatures} unit={userSettings.unit} isTrendingHigher={isTrendingHigher} />}
+        {socket && temperatures && !showSettings && !showChart && <TemperatureDisplay temperatures={temperatures} unit={userSettings.unit} isTrendingHigher={isTrendingHigher} />}
         {(!socket || !socket.connected) && <h3 style={{ textAlign: 'center' }}>Searching for devices...</h3>}
+        {temperatures && showChart && <RealtimeTemperatureChart series={[{ data: temperatures.map(t => ({ x: t.timeReceived, y: t.temperature })) }]} />}
+
+        {!showChart && <h4 style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</h4>}
       </div>
 
-      <h4 style={{ position: 'absolute', bottom: 0, right: 0, paddingRight: '0.5em' }}>Heating {heaterState ? 'on 🔥' : 'off ❄️'}</h4>
+
     </div>
   )
 }
