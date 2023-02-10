@@ -1,6 +1,6 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { ApexOptions } from "apexcharts";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 
 interface RealtimeTemperatureChartProps {
@@ -10,6 +10,10 @@ interface RealtimeTemperatureChartProps {
 type TimeFrame = '1 minute' | '1 hour' | '1 day'
 
 const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps> = ({ series }) => {
+
+    const getMinimumYAxisValue = (series: ApexAxisChartSeries): number => Math.min(...(series[0].data as { x: any; y: any }[]).map(point => point.y as number));
+    const getMaximumYAxisValue = (series: ApexAxisChartSeries): number => Math.max(...(series[0].data as { x: any; y: any }[]).map(point => point.y as number));
+
     const defaultOptions: ApexOptions = {
         chart: {
             type: 'line',
@@ -49,9 +53,8 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
             }
         },
         yaxis: {
-            min: 0,
-            max: 30,
-            tickAmount: 30,
+            min: getMinimumYAxisValue(series),
+            max: getMinimumYAxisValue(series),
             labels: {
                 formatter: (val: number) => val.toFixed(0)
             }
@@ -66,28 +69,50 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
 
     const handleTimeFrameChange = (_: React.MouseEvent<HTMLElement>, timeframe: TimeFrame,) => {
         let timeAgoInMilliSeconds: number;
-        
+
         switch (timeframe) {
-            case '1 day': 
+            case '1 day':
                 timeAgoInMilliSeconds = 86400000
                 break;
-            case '1 hour': 
+            case '1 hour':
                 timeAgoInMilliSeconds = 3600000;
                 break;
-            case '1 minute': 
+            case '1 minute':
                 timeAgoInMilliSeconds = 60000;
                 break;
         }
 
         setTimeFrame(timeframe);
-        setOptions(o => ({ ...o, xaxis: 
-            { ...o.xaxis, 
+        setOptions(o => ({
+            ...o, xaxis:
+            {
+                ...o.xaxis,
                 min: new Date().getTime() - timeAgoInMilliSeconds,
                 labels: {
                     format: timeframe == '1 minute' ? 'HH:mm:ss' : 'HH:mm'
                 }
-            }}));
+            }
+        }));
     }
+
+    // Adjust YAxis based on data
+    useEffect(() => {
+        const yAxisBufferInDegress = 3;
+        const minYAxisValue = getMinimumYAxisValue(series) - yAxisBufferInDegress;
+        const maxYAxisValue = getMaximumYAxisValue(series) + yAxisBufferInDegress;
+
+        const yAxisOptions = options?.yaxis as ApexYAxis;
+        if ((yAxisOptions?.min ?? 0) >= minYAxisValue || (yAxisOptions?.max ?? 30) <= maxYAxisValue) {
+            setOptions(o => ({
+                ...o, yaxis:
+                {
+                    ...o.yaxis,
+                    min: minYAxisValue,
+                    max: maxYAxisValue
+                }
+            }));
+        }
+    }, [series])
 
     return (
         <>
