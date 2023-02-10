@@ -70,7 +70,7 @@ const handleTargetTemperatureChange = async (targetTemperature: number, monitori
 
     if (!deviceMonitoringGroupMetadata[monitoringGroupId] || !deviceMonitoringGroupMetadata[monitoringGroupId]?.recordings) return;
 
-    await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].recordings[-1], monitoringGroupId);
+    await updateHeaterState(deviceMonitoringGroupMetadata[monitoringGroupId].recordings[0], monitoringGroupId);
     io.to(monitoringGroupId).emit("heater-state-update", heaterState == 'On');
 }
 
