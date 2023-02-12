@@ -125,7 +125,7 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
                 aria-label="Timeframe selection"
                 sx={{ alignItems: 'center', marginLeft: '2em' }}
             >
-                <ToggleButton value="1 minute" aria-label="1 minute" children="1 Minute" />
+                <ToggleButton value="10 minutes" aria-label="10 minutes" children="10 Minutes" />
                 <ToggleButton value="1 hour" aria-label="1 hour" children="1 Hour" />
                 <ToggleButton value="1 day" aria-label="1 day" children="1 Day" />
             </ToggleButtonGroup>
