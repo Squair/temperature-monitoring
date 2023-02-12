@@ -87,7 +87,7 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
             ...o, xaxis:
             {
                 ...o.xaxis,
-                min: new Date().getTime() - timeAgoInMilliSeconds,
+                min: Math.round((new Date().getTime() - timeAgoInMilliSeconds) / 5) * 5,
                 labels: {
                     format: 'HH:mm'
                 }
