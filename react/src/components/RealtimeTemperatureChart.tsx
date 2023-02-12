@@ -7,7 +7,7 @@ interface RealtimeTemperatureChartProps {
     series: ApexAxisChartSeries
 }
 
-type TimeFrame = '1 minute' | '1 hour' | '1 day'
+type TimeFrame = '10 minutes' | '1 hour' | '1 day'
 
 const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps> = ({ series }) => {
 
@@ -77,8 +77,8 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
             case '1 hour':
                 timeAgoInMilliSeconds = 3600000;
                 break;
-            case '1 minute':
-                timeAgoInMilliSeconds = 60000;
+            case '10 minutes':
+                timeAgoInMilliSeconds = 600000;
                 break;
         }
 
@@ -89,7 +89,7 @@ const RealtimeTemperatureChart: FunctionComponent<RealtimeTemperatureChartProps>
                 ...o.xaxis,
                 min: new Date().getTime() - timeAgoInMilliSeconds,
                 labels: {
-                    format: timeframe == '1 minute' ? 'HH:mm:ss' : 'HH:mm'
+                    format: 'HH:mm'
                 }
             }
         }));
